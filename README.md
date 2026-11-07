@@ -1,35 +1,57 @@
 # LIVE SCORE HUB
 
-A clean, responsive football live-scores platform.
+A football platform for live match information, authorized video streams, highlights and licensed broadcasts.
 
-## Planned features
-- Live matches, fixtures and results
-- League and team filters
-- Match details, events, lineups and statistics (where supported by the provider)
-- Automatic refresh with visible last-updated time
-- Provider attribution and API quota-aware requests
-- No advertising banners
+## Current architecture
 
-## Architecture
-- Frontend: React + Vite
-- Backend: Node.js + Express
-- Providers: SportScore (primary), API-Football (secondary/fallback)
-- API credentials belong in backend environment variables, never in browser code.
+- Frontend: React + Vite (Vercel)
+- Backend: Node.js + Express (Render)
+- Match data: SportScore public API (primary)
+- Video feeds: ScoreBat (optional developer token)
+- Secondary data provider: API-Football (planned; optional server-side key)
+
+## Features in progress
+
+- Live/recent match centre with 60-second refresh
+- Official video feed catalogue and embedded ScoreBat playback
+- Highlights feed
+- Responsive dark sports interface without advertising banners
+- Visible SportScore attribution
+- Licensed broadcast partner catalogue (next phase)
 
 ## Development
-1. Copy `server/.env.example` to `server/.env` when provider credentials are available.
-2. Install dependencies: `npm install`
-3. Install backend dependencies: `npm --prefix server install`
-4. Start both apps: `npm run dev`
+
+1. Copy `server/.env.example` to `server/.env`.
+2. Install frontend dependencies: `npm install`.
+3. Install backend dependencies: `npm --prefix server install`.
+4. Run both apps: `npm run dev`.
 
 Frontend: http://localhost:5173  
 Backend health: http://localhost:5000/api/health
 
-## Data freshness
-The interface will refresh through the backend on a provider-aware schedule. Refresh intervals must respect provider caching rules, rate limits and live-data availability. A refresh attempt does not guarantee that a provider has published new data.
+## Backend endpoints
 
-## Attribution
-SportScore and API-Football names/logos/data are subject to their respective terms. Provider attribution will be displayed where required.
+- `GET /api/health` — service and provider configuration
+- `GET /api/matches` — SportScore football match feed (server-cached)
+- `GET /api/videos/live` — ScoreBat live-streams feed (requires eligible ScoreBat developer access)
+- `GET /api/videos/highlights` — ScoreBat featured feed when token is configured; otherwise the free historical feed
+
+## Provider credentials
+
+- SportScore's documented public API does not require an API key on its public tier. Its attribution requirements apply: the UI includes a visible dofollow link to SportScore.
+- Add `SCOREBAT_API_TOKEN` to the Render service environment to enable ScoreBat feeds. Keep it on the backend only. The free ScoreBat feed contains selected older matches; fresh featured/live-stream feeds require an eligible paid developer plan and consume credits.
+- `API_FOOTBALL_KEY` is reserved for a future fallback integration. Never place provider keys in frontend code or Vercel's public client bundle.
+
+## Streaming rights and availability
+
+A video feed is not a guarantee that every match is currently live. ScoreBat's live-streams endpoint may include finished matches and replays, and playback availability is controlled by the source.
+
+The licensed broadcast catalogue will accept only streams that the project owner or broadcast partner is authorized to distribute. Before launch, each stream must have confirmed rights, permitted territories, viewing windows and provider terms. LIVE SCORE HUB will not scrape, bypass paywalls, or redistribute unauthorized broadcasts.
+
+## Data freshness
+
+Scores refresh every 60 seconds. Video feeds refresh every five minutes and are cached by the backend. Provider rate limits, cache headers, account quotas and source publication schedules take priority over refresh frequency.
 
 ## Project status
-Initial foundation. Provider integrations will be added only after validating the current official API documentation, authentication method, endpoints and free-tier limits.
+
+The initial SportScore and ScoreBat backend routes and the expanded watch-centre UI have been committed. Render and Vercel deployments run automatically from GitHub; verify each deployment before relying on production behavior. Licensed partner management, detailed match pages, league tables, user accounts and API-Football fallback remain future implementation phases.

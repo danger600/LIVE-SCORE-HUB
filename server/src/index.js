@@ -112,7 +112,7 @@ app.get("/api/videos/live", async (_req, res) => {
 
 app.get("/api/videos/highlights", async (_req, res) => {
   try {
-    const feed = process.env.SCOREBAT_API_TOKEN ? "featured-feed/" : "free-feed/";
+    const feed = process.env.SCOREBAT_PLAN === "paid" ? "featured-feed/" : "free-feed/";
     const data = await scoreBatFeed(feed, `scorebat:${feed}`, 10 * 60_000);
     res.json({
       source: "ScoreBat",

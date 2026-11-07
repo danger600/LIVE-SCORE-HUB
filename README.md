@@ -16,6 +16,9 @@ A football platform for live match information, fixtures, standings, team/player
 - `GET /api/health` — backend and integration configuration status
 - `GET /api/matches` — SportScore match feed, with API-Football live-fixtures fallback if SportScore fails
 - `GET /api/football/fixtures?live=all` — fixtures and live matches
+- `GET /api/football/fixtures?date=YYYY-MM-DD&timezone=Africa/Kigali` — fixtures for the selected date across provider-supported countries and competitions
+- `GET /api/football/fixtures?league=2&season=2026&next=20` — UEFA Champions League upcoming fixtures for the selected season
+- `GET /api/football/leagues?season=2026&current=true` — current leagues and competitions available from the provider
 - `GET /api/football/leagues?season=2026` — leagues/competitions
 - `GET /api/football/standings?league=39&season=2026` — standings
 - `GET /api/football/teams?league=39&season=2026` — teams
@@ -57,3 +60,7 @@ ScoreBat video embeds are displayed using the source-provided embed URL. License
 ## Deployment
 
 GitHub commits trigger Vercel and Render deployments. Confirm both deployments complete, then test `/api/health`, `/api/matches` and provider endpoints. API keys must be added separately in Render Environment; this repository intentionally contains blank placeholders only.
+
+## Worldwide match centre
+
+The frontend includes a World Fixtures view that requests fixtures for the selected calendar date across the countries and competitions covered by API-Football. The Competitions view lists current competitions returned by the provider and lets visitors open a competition's upcoming fixtures. UEFA Champions League is available as a featured shortcut (provider league ID 2). Coverage, historical depth and request limits depend on the API-Football subscription; this is not a guarantee that every amateur or regional match worldwide is indexed. The frontend uses the browser's timezone for kickoff display and requests are cached by the backend.

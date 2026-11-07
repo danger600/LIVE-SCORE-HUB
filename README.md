@@ -1,57 +1,59 @@
 # LIVE SCORE HUB
 
-A football platform for live match information, authorized video streams, highlights and licensed broadcasts.
+A football platform for live match information, fixtures, standings, team/player data, official video highlights and licensed broadcasts.
 
-## Current architecture
+## Architecture
 
-- Frontend: React + Vite (Vercel)
-- Backend: Node.js + Express (Render)
-- Match data: SportScore public API (primary)
-- Video feeds: ScoreBat (developer token required)
-- Secondary data provider: API-Football (planned; optional server-side key)
+- Frontend: React + Vite on Vercel
+- Backend: Node.js + Express on Render
+- Primary match feed: SportScore public football widget
+- Secondary/fallback football data: API-Football (API-Sports)
+- Official video feeds: ScoreBat Video API
+- Licensed broadcasts: partner integration, enabled only after distribution rights are verified
 
-## Features in progress
+## API endpoints
 
-- Live/recent match centre with 60-second refresh
-- Official video feed catalogue and embedded ScoreBat playback
-- Highlights feed
-- Responsive dark sports interface without advertising banners
-- Visible SportScore attribution
-- Licensed broadcast partner catalogue (next phase)
+- `GET /api/health` — backend and integration configuration status
+- `GET /api/matches` — SportScore match feed, with API-Football live-fixtures fallback if SportScore fails
+- `GET /api/football/fixtures?live=all` — fixtures and live matches
+- `GET /api/football/leagues?season=2026` — leagues/competitions
+- `GET /api/football/standings?league=39&season=2026` — standings
+- `GET /api/football/teams?league=39&season=2026` — teams
+- `GET /api/football/players?team=33&season=2026` — players (provider plan limits apply)
+- `GET /api/videos/highlights` — ScoreBat free historical feed or paid featured feed
+- `GET /api/videos/live` — ScoreBat live-streams feed (eligible paid plan required)
 
-## Development
+## Configure provider keys on Render
+
+Open the Render service Environment page and add these variables:
+
+| Key | Value |
+| --- | --- |
+| `API_FOOTBALL_KEY` | Paste your API-Football key |
+| `SCOREBAT_API_TOKEN` | Paste your ScoreBat developer token |
+| `SCOREBAT_PLAN` | `free` unless you have an eligible paid ScoreBat plan |
+| `LICENSED_STREAMS_CONFIGURED` | Keep `false` until a licensed broadcast partner is approved |
+
+Never commit real keys to GitHub, paste them into frontend code, or expose them through Vite `VITE_*` variables. Keep secrets in Render Environment only.
+
+SportScore's documented public API does not require a key on its public tier. Its visible attribution requirement is retained in the frontend. API-Football requires an API key sent server-side as `x-apisports-key`. Free-plan request quotas apply; server responses are cached for 60 seconds.
+
+ScoreBat requires a developer token even for its free feed. Free feed content is selected older matches; live-streams and featured-feed require an eligible paid plan. The live-streams endpoint may include replays and finished matches, not only currently live broadcasts.
+
+## Local development
 
 1. Copy `server/.env.example` to `server/.env`.
 2. Install frontend dependencies: `npm install`.
 3. Install backend dependencies: `npm --prefix server install`.
-4. Run both apps: `npm run dev`.
+4. Start frontend and backend using the scripts in the root package.
 
 Frontend: http://localhost:5173  
 Backend health: http://localhost:5000/api/health
 
-## Backend endpoints
+## Streaming rights
 
-- `GET /api/health` — service and provider configuration
-- `GET /api/matches` — SportScore football match feed (server-cached)
-- `GET /api/videos/live` — ScoreBat live-streams feed (requires eligible paid ScoreBat developer access)
-- `GET /api/videos/highlights` — ScoreBat free historical feed by default; set `SCOREBAT_PLAN=paid` to use featured-feed with an eligible plan
+ScoreBat video embeds are displayed using the source-provided embed URL. Licensed broadcast integrations must be added only for providers that authorize LIVE SCORE HUB to distribute their streams in the applicable territories and viewing windows. Do not scrape streams, bypass paywalls or redistribute unauthorized broadcasts.
 
-## Provider credentials
+## Deployment
 
-- SportScore's documented public API does not require an API key on its public tier. Its attribution requirements apply: the UI includes a visible dofollow link to SportScore.
-- Add `SCOREBAT_API_TOKEN` to the Render service environment. A token is required even for the free feed. Set `SCOREBAT_PLAN=free` for selected older videos; set `SCOREBAT_PLAN=paid` only when the account has access to paid featured/live-stream endpoints. Keep the token on the backend only.
-- `API_FOOTBALL_KEY` is reserved for a future fallback integration. Never place provider keys in frontend code or Vercel's public client bundle.
-
-## Streaming rights and availability
-
-A video feed is not a guarantee that every match is currently live. ScoreBat's live-streams endpoint may include finished matches and replays, and playback availability is controlled by the source.
-
-The licensed broadcast catalogue will accept only streams that the project owner or broadcast partner is authorized to distribute. Before launch, each stream must have confirmed rights, permitted territories, viewing windows and provider terms. LIVE SCORE HUB will not scrape, bypass paywalls, or redistribute unauthorized broadcasts.
-
-## Data freshness
-
-Scores refresh every 60 seconds. Video feeds refresh every five minutes and are cached by the backend. Provider rate limits, cache headers, account quotas and source publication schedules take priority over refresh frequency.
-
-## Project status
-
-The initial SportScore and ScoreBat backend routes and the expanded watch-centre UI have been committed. Render and Vercel deployments run automatically from GitHub; verify each deployment before relying on production behavior. Licensed partner management, detailed match pages, league tables, user accounts and API-Football fallback remain future implementation phases.
+GitHub commits trigger Vercel and Render deployments. Confirm both deployments complete, then test `/api/health`, `/api/matches` and provider endpoints. API keys must be added separately in Render Environment; this repository intentionally contains blank placeholders only.

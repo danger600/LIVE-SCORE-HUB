@@ -220,7 +220,7 @@ export default function App() {
           ["highlights", "Highlights"],
           ["leagues", "Competitions"]
         ].map(([id, label]) => (
-          <button key={id} className={tab === id ? "nav-item active" : "nav-item"} onClick={() => setTab(id)}>{label}{id === "live" && liveMatches.length > 0 ? <b className="nav-count">{liveMatches.length}</b> : null}</button>
+          <button key={id} className={tab === id ? "nav-item active" : "nav-item"} onClick={() => { setTab(id); if (id === "world") { setSelectedCompetition(null); loadWorldMatches(worldDate); } if (id === "leagues") loadCompetitions(); }}>{label}{id === "live" && liveMatches.length > 0 ? <b className="nav-count">{liveMatches.length}</b> : null}</button>
         ))}
       </nav>
 

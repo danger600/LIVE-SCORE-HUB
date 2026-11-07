@@ -1,0 +1,48 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #eef4ff;
+  background: #08111f;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(ellipse at 50% -20%, #18345b 0, #08111f 55%); }
+a { color: inherit; text-decoration: none; }
+.app-shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+.topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ffffff16; }
+.brand { display: flex; align-items: center; gap: 12px; font-size: 14px; letter-spacing: .12em; font-weight: 800; }
+.brand b { color: #65e6b2; }
+.brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #65e6b2; color: #08111f; font-weight: 900; letter-spacing: -.06em; }
+.status { color: #aab8cc; font-size: 12px; }
+.status i, .live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #65e6b2; box-shadow: 0 0 14px #65e6b277; }
+.hero { padding: 88px 0 72px; }
+.eyebrow { margin: 0 0 14px; color: #65e6b2; font-size: 10px; font-weight: 800; letter-spacing: .2em; }
+h1 { margin: 0; font-size: clamp(48px, 8vw, 88px); line-height: .98; letter-spacing: -.065em; }
+h1 span { color: #65e6b2; }
+.hero-copy { max-width: 520px; margin: 24px 0; color: #aab8cc; font-size: 16px; line-height: 1.7; }
+.hero-meta { color: #aab8cc; font-size: 11px; letter-spacing: .08em; }
+.meta-divider { padding: 0 10px; color: #52647d; }
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; padding: 24px 0; border-top: 1px solid #ffffff16; }
+.section-heading .eyebrow { margin-bottom: 8px; }
+h2 { margin: 0; font-size: 28px; letter-spacing: -.04em; }
+.updated { color: #8091a9; font-size: 11px; }
+.match-list { min-height: 230px; }
+.empty-state { display: grid; justify-items: center; text-align: center; padding: 48px 20px; border: 1px dashed #ffffff25; border-radius: 18px; background: #ffffff05; }
+.football-icon { font-size: 30px; }
+.empty-state h3 { margin: 14px 0 6px; font-size: 17px; }
+.empty-state p { max-width: 470px; margin: 0; color: #91a1b7; font-size: 13px; line-height: 1.6; }
+.match-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px; margin-bottom: 12px; border: 1px solid #ffffff18; border-radius: 14px; background: #ffffff08; color: #91a1b7; font-size: 12px; }
+.teams { display: flex; align-items: center; gap: 22px; color: #eef4ff; }
+.teams b { color: #65e6b2; font-size: 18px; }
+footer { display: flex; justify-content: space-between; gap: 16px; padding: 32px 0; margin-top: 48px; border-top: 1px solid #ffffff16; color: #71829a; font-size: 10px; letter-spacing: .1em; }
+@media (max-width: 620px) {
+  .app-shell { width: min(100% - 28px, 1120px); }
+  .topbar { height: 68px; }
+  .brand { font-size: 11px; }
+  .status { font-size: 10px; }
+  .hero { padding: 68px 0 54px; }
+  .section-heading { align-items: start; flex-direction: column; }
+  .match-card { align-items: stretch; flex-direction: column; }
+  .teams { justify-content: space-between; gap: 8px; font-size: 12px; }
+  footer { flex-direction: column; }
+}

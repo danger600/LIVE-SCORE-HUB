@@ -7,7 +7,7 @@ A football platform for live match information, authorized video streams, highli
 - Frontend: React + Vite (Vercel)
 - Backend: Node.js + Express (Render)
 - Match data: SportScore public API (primary)
-- Video feeds: ScoreBat (optional developer token)
+- Video feeds: ScoreBat (developer token required)
 - Secondary data provider: API-Football (planned; optional server-side key)
 
 ## Features in progress
@@ -33,13 +33,13 @@ Backend health: http://localhost:5000/api/health
 
 - `GET /api/health` — service and provider configuration
 - `GET /api/matches` — SportScore football match feed (server-cached)
-- `GET /api/videos/live` — ScoreBat live-streams feed (requires eligible ScoreBat developer access)
-- `GET /api/videos/highlights` — ScoreBat featured feed when token is configured; otherwise the free historical feed
+- `GET /api/videos/live` — ScoreBat live-streams feed (requires eligible paid ScoreBat developer access)
+- `GET /api/videos/highlights` — ScoreBat free historical feed by default; set `SCOREBAT_PLAN=paid` to use featured-feed with an eligible plan
 
 ## Provider credentials
 
 - SportScore's documented public API does not require an API key on its public tier. Its attribution requirements apply: the UI includes a visible dofollow link to SportScore.
-- Add `SCOREBAT_API_TOKEN` to the Render service environment to enable ScoreBat feeds. Keep it on the backend only. The free ScoreBat feed contains selected older matches; fresh featured/live-stream feeds require an eligible paid developer plan and consume credits.
+- Add `SCOREBAT_API_TOKEN` to the Render service environment. A token is required even for the free feed. Set `SCOREBAT_PLAN=free` for selected older videos; set `SCOREBAT_PLAN=paid` only when the account has access to paid featured/live-stream endpoints. Keep the token on the backend only.
 - `API_FOOTBALL_KEY` is reserved for a future fallback integration. Never place provider keys in frontend code or Vercel's public client bundle.
 
 ## Streaming rights and availability

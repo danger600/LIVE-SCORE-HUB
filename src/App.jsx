@@ -34,6 +34,14 @@ export default function App() {
   const [videoMessage, setVideoMessage] = useState("");
   const [activeVideo, setActiveVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [worldMatches, setWorldMatches] = useState([]);
+  const [worldLoading, setWorldLoading] = useState(false);
+  const [worldError, setWorldError] = useState("");
+  const [worldDate, setWorldDate] = useState(new Date().toISOString().slice(0, 10));
+  const [competitions, setCompetitions] = useState([]);
+  const [competitionSearch, setCompetitionSearch] = useState("");
+  const [selectedCompetition, setSelectedCompetition] = useState(null);
+  const [competitionLoading, setCompetitionLoading] = useState(false);
 
   async function loadMatches() {
     try {
@@ -53,6 +61,75 @@ export default function App() {
       setError(err.message || "Could not load match data.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function normalizeWorldFixtures(items = []) {
+    return items.map((item) => {
+      const status = item.fixture?.status || {};
+      const live = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"].includes(status.short);
+      return {
+        id: String(item.fixture?.id || Math.random()),
+        homeTeam: item.teams?.home?.name || "Home",
+        awayTeam: item.teams?.away?.name || "Away",
+        homeScore: item.goals?.home ?? null,
+        awayScore: item.goals?.away ?? null,
+        status: live ? "live" : (["FT", "AET", "PEN"].includes(status.short) ? "finished" : "scheduled"),
+        statusText: status.elapsed != null && live ? `${status.elapsed}' · ${status.long || "Live"}` : (status.long || status.short || "Scheduled"),
+        kickoff: item.fixture?.date || null,
+        competition: item.league?.name || "Football",
+        homeLogo: item.teams?.home?.logo || null,
+        awayLogo: item.teams?.away?.logo || null,
+        source: "API-Football"
+      };
+    });
+  }
+
+  async function loadWorldMatches(date = worldDate) {
+    setWorldLoading(true);
+    setWorldError("");
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      const response = await fetch(`${API}/football/fixtures?date=${encodeURIComponent(date)}&timezone=${encodeURIComponent(timezone)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Worldwide fixtures are unavailable.");
+      setWorldMatches(normalizeWorldFixtures(data.response || []));
+    } catch (err) {
+      setWorldError(err.message || "Could not load worldwide fixtures.");
+      setWorldMatches([]);
+    } finally {
+      setWorldLoading(false);
+    }
+  }
+
+  async function loadCompetitions() {
+    setCompetitionLoading(true);
+    try {
+      const response = await fetch(`${API}/football/leagues?season=2026&current=true`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Competitions are unavailable.");
+      setCompetitions(Array.isArray(data.response) ? data.response : []);
+    } catch (err) {
+      setWorldError(err.message || "Could not load competitions.");
+    } finally {
+      setCompetitionLoading(false);
+    }
+  }
+
+  async function loadCompetitionFixtures(leagueId, name) {
+    setSelectedCompetition({ id: leagueId, name });
+    setCompetitionLoading(true);
+    setWorldError("");
+    try {
+      const response = await fetch(`${API}/football/fixtures?league=${encodeURIComponent(leagueId)}&season=2026&next=20`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Competition fixtures are unavailable.");
+      setWorldMatches(normalizeWorldFixtures(data.response || []));
+    } catch (err) {
+      setWorldError(err.message || "Could not load competition fixtures.");
+      setWorldMatches([]);
+    } finally {
+      setCompetitionLoading(false);
     }
   }
 
@@ -137,10 +214,11 @@ export default function App() {
       <nav className="main-nav" aria-label="Main navigation">
         {[
           ["matches", "All matches"],
+          ["world", "World fixtures"],
           ["live", "Live now"],
           ["streams", "Watch live"],
           ["highlights", "Highlights"],
-          ["leagues", "Leagues"]
+          ["leagues", "Competitions"]
         ].map(([id, label]) => (
           <button key={id} className={tab === id ? "nav-item active" : "nav-item"} onClick={() => setTab(id)}>{label}{id === "live" && liveMatches.length > 0 ? <b className="nav-count">{liveMatches.length}</b> : null}</button>
         ))}
@@ -171,6 +249,37 @@ export default function App() {
         </section>
       ) : null}
 
+      {tab === "world" ? (
+        <section className="content-section">
+          <div className="section-heading">
+            <div><p className="eyebrow">GLOBAL MATCH CENTRE</p><h2>{selectedCompetition ? selectedCompetition.name : "Football around the world"}</h2></div>
+            <span className="updated">Worldwide fixtures · API-Football</span>
+          </div>
+          <div className="world-toolbar">
+            <label>Match date <input type="date" value={worldDate} onChange={(event) => { setWorldDate(event.target.value); setSelectedCompetition(null); loadWorldMatches(event.target.value); }} /></label>
+            <button className="primary-button" onClick={() => { setSelectedCompetition(null); loadWorldMatches(worldDate); }}>Load all matches</button>
+            <button className="secondary-button" onClick={() => loadCompetitionFixtures(2, "UEFA Champions League")}>UEFA Champions League</button>
+          </div>
+          <p className="world-note">Shows fixtures published by the connected provider across supported countries and competitions for the selected date. Coverage depends on your API-Football plan.</p>
+          {worldError ? <div className="notice error-notice">{worldError} <button onClick={() => loadWorldMatches(worldDate)}>Retry</button></div> : null}
+          {worldLoading ? <div className="empty-state">Loading worldwide fixtures…</div> : worldMatches.length ? (
+            <div className="match-grid">
+              {worldMatches.map((match) => (
+                <article className="match-card" key={match.id}>
+                  <div className="match-topline"><span>{match.competition}</span><span className={match.status === "live" ? "live-label" : "match-status"}>{match.statusText}</span></div>
+                  <div className="team-row">
+                    <div className="team-name">{match.homeLogo ? <img src={match.homeLogo} alt="" /> : <span className="team-placeholder">H</span>}<b>{match.homeTeam}</b></div>
+                    <strong className="score">{match.homeScore ?? "–"} <i>:</i> {match.awayScore ?? "–"}</strong>
+                    <div className="team-name away">{match.awayLogo ? <img src={match.awayLogo} alt="" /> : <span className="team-placeholder">A</span>}<b>{match.awayTeam}</b></div>
+                  </div>
+                  <div className="match-bottom"><span>{formatTime(match.kickoff)}</span><span>API-Football</span></div>
+                </article>
+              ))}
+            </div>
+          ) : <div className="empty-state"><div className="football-icon">🌍</div><h3>No worldwide fixtures returned</h3><p>Choose another date, or check that the API-Football plan includes fixtures for the selected competitions.</p></div>}
+        </section>
+      ) : null}
+
       {tab === "streams" ? (
         <section className="content-section">
           <div className="section-heading"><div><p className="eyebrow">WATCH CENTRE</p><h2>Official live video</h2></div><span className="updated">Verified source feeds</span></div>
@@ -188,7 +297,30 @@ export default function App() {
       ) : null}
 
       {tab === "leagues" ? (
-        <section className="content-section"><div className="section-heading"><div><p className="eyebrow">FOOTBALL WORLD</p><h2>Leagues & competitions</h2></div></div><div className="empty-state"><div className="football-icon">🏆</div><h3>Competition centre is next</h3><p>League tables, fixtures, team pages and player statistics will be connected in the next data integration phase.</p></div></section>
+        <section className="content-section">
+          <div className="section-heading"><div><p className="eyebrow">FOOTBALL WORLD</p><h2>World leagues & championships</h2></div><span className="updated">Global competition catalogue</span></div>
+          <div className="world-toolbar">
+            <input className="competition-search" type="search" placeholder="Search leagues, cups or countries…" value={competitionSearch} onChange={(event) => setCompetitionSearch(event.target.value)} />
+            <button className="primary-button" onClick={loadCompetitions}>Refresh competitions</button>
+            <button className="secondary-button" onClick={() => { setTab("world"); loadCompetitionFixtures(2, "UEFA Champions League"); }}>UEFA Champions League fixtures</button>
+          </div>
+          {competitionLoading ? <div className="empty-state">Loading world competitions…</div> : null}
+          {worldError ? <div className="notice error-notice">{worldError}</div> : null}
+          {competitions.length ? (
+            <div className="competition-grid">
+              {competitions.filter((entry) => {
+                const text = `${entry.league?.name || ""} ${entry.country?.name || ""} ${entry.league?.type || ""}`.toLowerCase();
+                return text.includes(competitionSearch.toLowerCase());
+              }).map((entry) => (
+                <button className="competition-card" key={entry.league?.id} onClick={() => { setTab("world"); loadCompetitionFixtures(entry.league.id, entry.league.name); }}>
+                  {entry.league?.logo ? <img src={entry.league.logo} alt="" /> : <span>🏆</span>}
+                  <span><b>{entry.league?.name}</b><small>{entry.country?.name || "International"} · {entry.league?.type || "Competition"}</small></span>
+                  <strong>↗</strong>
+                </button>
+              ))}
+            </div>
+          ) : !competitionLoading ? <div className="empty-state"><div className="football-icon">🏆</div><h3>Load world competitions</h3><p>Browse available domestic leagues, cups and international championships from the connected football data provider.</p><button className="primary-button" onClick={loadCompetitions}>Load competitions</button></div> : null}
+        </section>
       ) : null}
 
       <footer><div><b>LIVE SCORE HUB</b><span>Football, all in one place.</span></div><a href="https://sportscore.com/developers/" target="_blank" rel="noreferrer">Live scores powered by SportScore ↗</a></footer>
